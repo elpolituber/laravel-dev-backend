@@ -1,0 +1,163 @@
+{
+    "state": {
+        "type": {
+            "type": "STATE_TYPE",
+            "active": "1",
+            "deleted": "0"
+        }
+    },
+    "status": {
+        "type": {
+            "type": "STATUS_TYPE",
+            "active": "1",
+            "inactive": "2",
+            "locked": "3"
+        }
+    },
+    "role": {
+        "name": {
+            "type": "ROLE_NAME",
+            "admin": "ADMIN",
+            "teacher": "TEACHER",
+            "student": "STUDENT",
+            "chancellor": "CHANCELLOR",
+            "vice_chancellor": "VICE_CHANCELLOR",
+            "concierge": "CONCIERGE",
+            "career_coordinator": "CAREER_COORDINATOR",
+            "academic_coordinator": "ACADEMIC_COORDINATOR",
+            "community_coordinator": "COMMUNITY_COORDINATOR",
+            "investigation_coordinator": "INVESTIGATION_COORDINATOR",
+            "administrative_coordinator": "ADMINISTRATIVE_COORDINATOR"
+        }
+    },
+    "module": {
+        "name": {
+            "type": "MODULE_NAME",
+            "attendance": "ATTENDANCE"
+        }
+    },
+    "permission": {
+        "action": {
+            "create": "CREATE",
+            "update": "UPDATE",
+            "delete": "DELETE",
+            "select": "SELECT"
+        }
+    },
+    "route": {
+        "status": {
+            "type": "ROUTE_STATUS",
+            "available": "AVAILABLE",
+            "maintenance": "MAINTENANCE"
+        },
+        "name": {
+            "type": "ROUTE_NAME",
+            "attendance": {
+                "attendance": "/attendance",
+                "administration": "/attendance/administration"
+            }
+        }
+    },
+    "menu": {
+        "type": {
+            "type": "MENU_TYPE",
+            "normal": "normal",
+            "mega": "mega"
+        }
+    },
+    "system": {
+        "name": {
+            "type": "SYSTEM_NAME",
+            "ignug": "IGNUG"
+        },
+        "status": {
+            "type": "SYSTEM_STATUS",
+            "available": "AVAILABLE",
+            "maintenance": "MAINTENANCE"
+        }
+    },
+    "workday": {
+        "type": {
+            "type": "WORKDAY_TYPE",
+            "work": "WORK",
+            "lunch": "LUNCH"
+        }
+    },
+    "task": {
+        "process": {
+            "type": "TASK_PROCESS",
+            "chancellor": "CHANCELLOR",
+            "vice_chancellor": "VICE_CHANCELLOR",
+            "concierge": "CONCIERGE",
+            "academic": "ACADEMIC",
+            "administrative": "ADMINISTRATIVE",
+            "investigation": "INVESTIGATION",
+            "community": "COMMUNITY"
+        },
+        "activity": {
+            "type": "TASK_ACTIVITY"
+        }
+    },
+    "sex": {
+        "type": {
+            "type": "SEX_TYPE",
+            "male": "MALE",
+            "female": "FEMALE"
+        }
+    },
+    "gender": {
+        "type": {
+            "type": "GENDER_TYPE",
+            "male": "MALE",
+            "female": "FEMALE"
+        }
+    },
+    "identification_type": {
+        "type": {
+            "type": "IDENTIFICATION_TYPE",
+            "cc": "CC",
+            "passport": "PASSPORT"
+        }
+    },
+    "ethnic_origin": {
+        "type": {
+            "type": "ETHNIC_ORIGIN_TYPE",
+            "indigena": "1",
+            "afroecuatoriano": "2",
+            "negro": "3",
+            "mulato": "4",
+            "montuvio": "5",
+            "mestizo": "6",
+            "blanco": "7",
+            "other": "8",
+            "unregistered": "9"
+        }
+    },
+    "blood_type": {
+        "type": {
+            "type": "BLOOD_TYPE",
+            "a-": "A-",
+            "a+": "A+",
+            "b-": "B-",
+            "b+": "B+",
+            "ab-": "AB-",
+            "ab+": "AB+",
+            "o-": "O-",
+            "o+": "O+"
+        }
+    },
+    "career": {
+        "modality": {
+            "type": "CAREER_MODALITY",
+            "presencial": "PRESENCIAL",
+            "semipresencial": "SEMIPRESENCIAL",
+            "distancia": "DISTANCIA",
+            "dual": "DUAL"
+        },
+        "type": {
+            "type": "CAREER_TYPE",
+            "technology": "TECHNOLOGY",
+            "technical": "TECHNICAL"
+        }
+    }
+}
