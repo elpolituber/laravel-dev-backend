@@ -2,6 +2,7 @@
 
 namespace App\Models\Ignug;
 
+use App\Models\Attendance\Attendance;
 use App\Models\Authentication\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -47,6 +48,11 @@ class Institution extends Model implements Auditable
     public function careers()
     {
         return $this->hasMany(Career::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
     }
 
     public function users()

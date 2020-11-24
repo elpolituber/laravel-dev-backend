@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Attendance;
 
+use App\Models\Ignug\Institution;
 use App\Models\Ignug\State;
 use App\Http\Controllers\Controller;
 use App\Models\Ignug\Catalogue;
@@ -121,7 +122,7 @@ class WorkdayController extends Controller
 
         $attendance = $user->attendances()->firstWhere('date', $currentDate);
         if (!$attendance) {
-            $attendance = $this->createAttendance($currentDate, $user);
+            $attendance = $this->createAttendance($request->institution_id, $currentDate, $user);
         }
         if ($dataWorkday['type']['code'] === $catalogues['workday']['type']['work']) {
             $works = $attendance->workdays()
@@ -224,12 +225,13 @@ class WorkdayController extends Controller
             ]], 201);
     }
 
-    private function createAttendance($currentDate, $user)
+    private function createAttendance($institutionId, $currentDate, $user)
     {
         $newAttendance = new Attendance([
             'date' => $currentDate,
         ]);
         $newAttendance->state()->associate(State::firstWhere('code', State::ACTIVE));
+        $newAttendance->institution()->associate(Institution::findOrFail($institutionId));
         $newAttendance->attendanceable()->associate($user);
         $newAttendance->save();
         return $newAttendance;

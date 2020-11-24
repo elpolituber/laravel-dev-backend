@@ -11,6 +11,7 @@ class CreateAttendancesTable extends Migration
         Schema::connection('pgsql-attendance')->create('attendances', function (Blueprint $table) {
             $table->id();
             $table->morphs('attendanceable');
+            $table->foreignId('institution_id')->constrained('ignug.institutions');
             $table->foreignId('state_id')->constrained('ignug.states');
             $table->date('date');
             $table->timestamps();

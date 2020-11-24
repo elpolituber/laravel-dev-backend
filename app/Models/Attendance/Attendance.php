@@ -3,6 +3,8 @@
 namespace App\Models\Attendance;
 
 use App\Models\Authentication\User;
+use App\Models\Ignug\Institution;
+use App\Models\Ignug\Observation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Ignug\Teacher;
 use Illuminate\Database\Eloquent\Model;
@@ -64,6 +66,16 @@ class Attendance extends Model implements Auditable
     public function tasks()
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
+
+    public function observations()
+    {
+        return $this->morphMany(Observation::class, 'observationable');
     }
 
 }

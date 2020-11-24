@@ -8,6 +8,7 @@ use App\Models\Attendance\Task;
 use App\Models\Attendance\Workday;
 use App\Models\Authentication\Role;
 use App\Models\Authentication\User;
+use App\Models\Ignug\Institution;
 use App\Models\Ignug\State;
 use App\Models\Ignug\Catalogue;
 use Carbon\Carbon;
@@ -225,7 +226,7 @@ class AttendanceController extends Controller
         }
         $attendance = $user->attendances()->where('date', $request->date)->first();
         if (!$attendance) {
-            $attendance = $this->createAttendance($request->date, $user);
+            $attendance = $this->createAttendance($request->institution_id, $request->date, $user);
         }
         if ($dataWorkday['type']['code'] === $catalogues['workday']['type']['work']) {
             $works = $attendance->workdays()
@@ -359,12 +360,13 @@ class AttendanceController extends Controller
             ]], 200);
     }
 
-    private function createAttendance($currentDate, $user)
+    private function createAttendance($institutionId, $currentDate, $user)
     {
         $newAttendance = new Attendance([
             'date' => $currentDate,
         ]);
         $newAttendance->state()->associate(State::firstWhere('code', State::ACTIVE));
+        $newAttendance->institution()->associate(Institution::findOrFail($institutionId));
         $newAttendance->attendanceable()->associate($user);
         $newAttendance->save();
         return $newAttendance;
