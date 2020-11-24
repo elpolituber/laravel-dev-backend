@@ -22,7 +22,7 @@ class TaskController extends Controller
         $dataTask = $data['task'];
 
         $user = User::findOrFail($request->user_id);
-        $attendance = $user->attendances()->firstWhere('date', $currentDate);
+        $attendance = $user->attendances()->where('date', $currentDate)->where('institution_id', $request->institution_id)->first();
 
         if ($attendance) {
             $this->createOrUpdateTask($dataTask, $attendance);
@@ -47,6 +47,7 @@ class TaskController extends Controller
                     }]);
                 }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
             }])
+                ->where('institution_id', $request->institution_id)
                 ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
                 ->where('date', Carbon::now())
                 ->first(),
@@ -74,7 +75,7 @@ class TaskController extends Controller
             ]], 201);
     }
 
-    public function createOrUpdateTask($datTask, $attendance)
+    private function createOrUpdateTask($datTask, $attendance)
     {
         $task = $attendance->tasks()->where('type_id', $datTask['type']['id'])->first();
 
@@ -114,6 +115,7 @@ class TaskController extends Controller
                         $type->with('parent');
                     }]);
             }])
+            ->where('institution_id', $request->institution_id)
             ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
             ->get();
 

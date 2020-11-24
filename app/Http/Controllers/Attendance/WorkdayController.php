@@ -120,7 +120,7 @@ class WorkdayController extends Controller
                 ]], 404);
         }
 
-        $attendance = $user->attendances()->firstWhere('date', $currentDate);
+        $attendance = $user->attendances()->where('date', $currentDate)->where('institution_id', $request->institution_id)->first();
         if (!$attendance) {
             $attendance = $this->createAttendance($request->institution_id, $currentDate, $user);
         }
@@ -174,6 +174,7 @@ class WorkdayController extends Controller
                 }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
             }])
                 ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+                ->where('institution_id', $request->institution_id)
                 ->where('date', Carbon::now())
                 ->first(),
             'msg' => [

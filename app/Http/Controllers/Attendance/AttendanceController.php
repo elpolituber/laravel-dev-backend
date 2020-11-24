@@ -29,9 +29,11 @@ class AttendanceController extends Controller
                             $parent->orderBy('name');
                         }]);
                     }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
-                }])->where('date', $request->date);
-        }])->with(['institutions' => function ($institution) use ($request) {
-            $institution->where('institutions.id', $request->institution_id);
+                }])
+                ->where('institution_id', $request->institution_id)
+                ->where('date', $request->date);
+        }])->with(['institutions' => function ($institutions) use ($request) {
+            $institutions->where('institution_id', $request->institution_id);
         }])
             ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
             ->get();
@@ -68,6 +70,7 @@ class AttendanceController extends Controller
                     }]);
             }])
             ->whereBetween('date', [$request->start_date, $request->end_date])
+            ->where('institution_id', $request->institution_id)
             ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
             ->get();
         return response()->json([
@@ -93,6 +96,7 @@ class AttendanceController extends Controller
                         $type->with('parent');
                     }]);
             }])
+            ->where('institution_id', $request->institution_id)
             ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
             ->get();
 
@@ -136,6 +140,7 @@ class AttendanceController extends Controller
                         $type->with('parent');
                     }]);
             }])
+            ->where('institution_id', $request->institution_id)
             ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
             ->get();
         return response()->json([
@@ -163,6 +168,7 @@ class AttendanceController extends Controller
                     }]);
             }])
             ->whereBetween('date', [$request->start_date, $request->end_date])
+            ->where('institution_id', $request->institution_id)
             ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
             ->get();
         return response()->json([
@@ -188,6 +194,7 @@ class AttendanceController extends Controller
                     }]);
                 }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
             }])
+            ->where('institution_id', $request->institution_id)
             ->where('date', Carbon::now())
             ->first();
         if (!$attendances) {
@@ -224,7 +231,8 @@ class AttendanceController extends Controller
                     'code' => '404',
                 ]], 404);
         }
-        $attendance = $user->attendances()->where('date', $request->date)->first();
+        $attendance = $user->attendances()->where('date', $request->date)->where('institution_id', $request->institution_id)->first();
+
         if (!$attendance) {
             $attendance = $this->createAttendance($request->institution_id, $request->date, $user);
         }
@@ -277,6 +285,7 @@ class AttendanceController extends Controller
                 }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
             }])
                 ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+                ->where('institution_id', $request->institution_id)
                 ->where('date', Carbon::now())
                 ->first(),
             'msg' => [
