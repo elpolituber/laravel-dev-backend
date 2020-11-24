@@ -145,7 +145,7 @@ class User extends Authenticatable implements Auditable
 
     public function institutions()
     {
-        return $this->morphToMany(Institution::class, 'institutionable');
+        return $this->morphToMany(Institution::class, 'institutionable','ignug.institutionables');
     }
 
     public function attendances()

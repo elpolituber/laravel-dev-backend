@@ -2,6 +2,7 @@
 
 namespace App\Models\Ignug;
 
+use App\Models\Authentication\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Contracts\Auditable;
@@ -46,5 +47,10 @@ class Institution extends Model implements Auditable
     public function careers()
     {
         return $this->hasMany(Career::class);
+    }
+
+    public function users()
+    {
+        return $this->morphedByMany(User::class, 'institutionable','ignug.institutionables');
     }
 }

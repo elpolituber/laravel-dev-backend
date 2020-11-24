@@ -14,6 +14,7 @@ Route::group(['prefix' => 'tasks'], function () {
     Route::post('', [TaskController::class, 'store']);
     Route::delete('{id}', [TaskController::class, 'destroy']);
     Route::get('total_processes', [TaskController::class, 'getTotalProcesses']);
+    Route::get('processes', [TaskController::class, 'getProcess']);
 });
 
 Route::group(['prefix' => 'attendances'], function () {
@@ -35,7 +36,8 @@ Route::group(['prefix' => 'attendances'], function () {
 Route::apiResource('attendances', AttendanceController::class);
 
 Route::get('catalogues', function () {
-    $w = new \App\Models\Attendance\Workday();
-    return $w->catalogues;
-    return $catalogues['role'];
+    $institutions = \App\Models\Ignug\Institution::get();
+    foreach ($institutions->users as $user) {
+        return $user->pivot;
+    }
 });

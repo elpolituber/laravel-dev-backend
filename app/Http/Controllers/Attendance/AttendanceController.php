@@ -347,8 +347,7 @@ class AttendanceController extends Controller
     public function getProcess(Request $request)
     {
         $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
-        $role = Role::findOrFail($request->role_id);
-        $process = $role->catalogues()->with(['children' => function ($children) {
+        $process = Catalogue::with(['children' => function ($children) {
             $children->orderBy('name');
         }])->where('type', $catalogues['task']['process']['type'])->orderBy('name')->get();
         return response()->json([

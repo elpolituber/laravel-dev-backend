@@ -33,7 +33,7 @@
                         <p>{{env('APP_SYSTEM')}}</p>
                         <small>Nota de descargo:</small>
                         <small>La información contenida en este correo electrónico es confidencial y solo puede ser
-                            utilizada por el usuario al cual esta dirigido.</small>
+                            utilizada por el usuario al cual está dirigido.</small>
                         <small>Esta información no debe ser distribuida ni copiada total o parcialmente por ningun medio
                             sin la autorización de la Institución.
                         </small>

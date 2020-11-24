@@ -142,4 +142,20 @@ class TaskController extends Controller
                 'code' => '200',
             ]], 200);
     }
+
+    public function getProcess(Request $request)
+    {
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
+        $role = Role::findOrFail($request->role_id);
+        $process = $role->catalogues()->with(['children' => function ($children) {
+            $children->orderBy('name');
+        }])->where('type', $catalogues['task']['process']['type'])->orderBy('name')->get();
+        return response()->json([
+            'data' => $process,
+            'msg' => [
+                'summary' => 'success',
+                'detail' => '',
+                'code' => '200',
+            ]], 200);
+    }
 }

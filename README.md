@@ -72,5 +72,6 @@ Fileinfo
 ## Comands
 - sudo chown -R www-data: storage
 - sudo chmod -R 755 storage
+- sudo ln -s /var/www/pruebas/prod-siga/backend/storage/app/public/ /var/www/pruebas/prod-siga/public_html/frontend/public/storage
 
 

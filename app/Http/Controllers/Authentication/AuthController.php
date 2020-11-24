@@ -298,6 +298,7 @@ class  AuthController extends Controller
         }
 
         $user->password = Hash::make($request->password);
+        $user->attempts = User::ATTEMPTS;
         $user->save();
         $passworReset->update(['is_valid' => false]);
         return response()->json([
