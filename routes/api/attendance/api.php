@@ -32,12 +32,10 @@ Route::group(['prefix' => 'attendances'], function () {
     Route::post('start_day', [AttendanceController::class, 'startDay']);
     Route::put('end_day', [AttendanceController::class, 'endDay']);
     Route::put('day', [AttendanceController::class, 'updateDay']);
+    Route::post('register_tasks', [AttendanceController::class, 'registerTask']);
 });
 Route::apiResource('attendances', AttendanceController::class);
 
 Route::get('catalogues', function () {
-    $institutions = \App\Models\Ignug\Institution::get();
-    foreach ($institutions->users as $user) {
-        return $user->pivot;
-    }
+
 });

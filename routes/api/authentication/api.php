@@ -38,3 +38,6 @@ Route::group(['prefix' => 'users'], function () {
 
 
 
+Route::get('test', function () {
+return response()->json(\App\Models\Authentication\User::withoutGlobalScope('isActive')->get());
+})->withoutMiddleware(['auth:api', 'check-attempts', 'check-status']);;

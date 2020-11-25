@@ -9,6 +9,7 @@ use App\Models\Attendance\Workday;
 use App\Models\Authentication\Role;
 use App\Models\Authentication\User;
 use App\Models\Ignug\Institution;
+use App\Models\Ignug\Observation;
 use App\Models\Ignug\State;
 use App\Models\Ignug\Catalogue;
 use Carbon\Carbon;
@@ -21,10 +22,10 @@ class AttendanceController extends Controller
     {
         $users = User::with(['attendance' => function ($attendances) use ($request) {
             $attendances->with(['workdays' => function ($workdays) use ($request) {
-                $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->with('type');
+                $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->with('observations')->with('type');
             }])
                 ->with(['tasks' => function ($tasks) {
-                    $tasks->with(['type' => function ($type) {
+                    $tasks->with('observations')->with(['type' => function ($type) {
                         $type->with(['parent' => function ($parent) {
                             $parent->orderBy('name');
                         }]);
@@ -61,11 +62,11 @@ class AttendanceController extends Controller
         $attendances = Attendance::
         with(['workdays' => function ($workdays) {
             $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
-                ->with('type');
+                ->with('observations')->with('type');
         }])
             ->with(['tasks' => function ($tasks) {
                 $tasks->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
-                    ->with(['type' => function ($type) {
+                    ->with('observations')->with(['type' => function ($type) {
                         $type->with('parent');
                     }]);
             }])
@@ -132,11 +133,11 @@ class AttendanceController extends Controller
         $attendances = $user->attendances()
             ->with(['workdays' => function ($workdays) {
                 $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
-                    ->with('type');
+                    ->with('observations')->with('type');
             }])
             ->with(['tasks' => function ($tasks) {
                 $tasks->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
-                    ->with(['type' => function ($type) {
+                    ->with('observations')->with(['type' => function ($type) {
                         $type->with('parent');
                     }]);
             }])
@@ -159,11 +160,11 @@ class AttendanceController extends Controller
         $attendances = $user->attendances()
             ->with(['workdays' => function ($workdays) {
                 $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
-                    ->with('type');
+                    ->with('observations')->with('type');
             }])
             ->with(['tasks' => function ($tasks) {
                 $tasks->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
-                    ->with(['type' => function ($type) {
+                    ->with('observations')->with(['type' => function ($type) {
                         $type->with('parent');
                     }]);
             }])
@@ -185,10 +186,10 @@ class AttendanceController extends Controller
         $user = User::findOrFail($request->user_id);
         $attendances = $user->attendances()
             ->with(['workdays' => function ($workdays) {
-                $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->with('type');
+                $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->with('observations')->with('type');
             }])
             ->with(['tasks' => function ($tasks) {
-                $tasks->with(['type' => function ($type) {
+                $tasks->with('observations')->with(['type' => function ($type) {
                     $type->with(['parent' => function ($parent) {
                         $parent->orderBy('name');
                     }]);
@@ -272,7 +273,7 @@ class AttendanceController extends Controller
             }
         }
 
-        $this->createWorkday($dataWorkday, $attendance);
+        $this->createWorkday($request->user(), $dataWorkday, $attendance);
 
         return response()->json([
             'data' => $user->attendances()->with(['workdays' => function ($workdays) {
@@ -305,9 +306,19 @@ class AttendanceController extends Controller
         if ($workday) {
             $workday->update([
                 'end_time' => $dataWorkday['end_time'],
-                'duration' => $this->calculateDuration($workday->start_time->format('H:i:s'), $dataWorkday['end_time']),
-                'observations' => $dataWorkday['observations']
+                'duration' => $this->calculateDuration($workday->start_time->format('H:i:s'), $dataWorkday['end_time'])
             ]);
+
+            $observation = new Observation([
+                'old_values' => null,
+                'new_values' => 'Hora fin: ' . $dataWorkday['end_time'],
+                'description' => $dataWorkday['observation']
+            ]);
+
+            $observation->state()->associate(State::firstWhere('code', State::ACTIVE));
+            $observation->user()->associate($request->user());
+            $observation->observationable()->associate($workday);
+            $observation->save();
         }
 
         $workdays = Workday::where('attendance_id', $workday['attendance_id'])
@@ -332,12 +343,22 @@ class AttendanceController extends Controller
         $workday = Workday::findOrFail($dataWorkday['id']);
 
         if ($workday) {
+            $observation = new Observation([
+                'old_values' => 'Hora inicio: ' . $workday->start_time . ' | ' . 'Hora fin: ' . $workday->end_time,
+                'new_values' => 'Hora inicio: ' . $dataWorkday['start_time'] . ' | ' . 'Hora fin: ' . $dataWorkday['end_time'],
+                'description' => $dataWorkday['observation']
+            ]);
+
             $workday->update([
                 'end_time' => $dataWorkday['end_time'],
                 'start_time' => $dataWorkday['start_time'],
-                'duration' => $this->calculateDuration($dataWorkday['start_time'], $dataWorkday['end_time']),
-                'observations' => $dataWorkday['observations']
+                'duration' => $this->calculateDuration($dataWorkday['start_time'], $dataWorkday['end_time'])
             ]);
+
+            $observation->state()->associate(State::firstWhere('code', State::ACTIVE));
+            $observation->user()->associate($request->user());
+            $observation->observationable()->associate($workday);
+            $observation->save();
         }
 
         $workdays = Workday::where('attendance_id', $workday['attendance_id'])
@@ -351,6 +372,48 @@ class AttendanceController extends Controller
                 'summary' => 'success',
                 'detail' => '',
                 'code' => '200',
+            ]], 201);
+    }
+
+    public function registerTask(Request $request)
+    {
+        $currentDate = Carbon::now()->format('Y-m-d');
+        $data = $request->json()->all();
+        $dataTask = $data['task'];
+
+        $user = User::findOrFail($request->user_id);
+        $attendance = $user->attendances()->where('date', $currentDate)->where('institution_id', $request->institution_id)->first();
+
+        if ($attendance) {
+            $this->createOrUpdateTask($request->user(), $dataTask, $attendance);
+        } else {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'Asistencia no encontrada',
+                    'detail' => 'Debes iniciar primero tu jornada',
+                    'code' => '404',
+                ]], 404);
+        }
+
+        return response()->json([
+            'data' => $user->attendances()->with(['workdays' => function ($workdays) {
+                $workdays->with('type')->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->orderBy('start_time');
+            }])->with(['tasks' => function ($tasks) {
+                $tasks->with(['type' => function ($type) {
+                    $type->with(['parent' => function ($parent) {
+                        $parent->orderBy('name');
+                    }]);
+                }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
+            }])
+                ->where('institution_id', $request->institution_id)
+                ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+                ->where('date', Carbon::now())
+                ->first(),
+            'msg' => [
+                'summary' => 'Success',
+                'detail' => 'Se guardó correctamente la actividad',
+                'code' => '201',
             ]], 201);
     }
 
@@ -381,18 +444,27 @@ class AttendanceController extends Controller
         return $newAttendance;
     }
 
-    private function createWorkday($dataWorkday, $attendance)
+    private function createWorkday($user, $dataWorkday, $attendance)
     {
         $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
         $workday = new Workday([
             'start_time' => $dataWorkday['start_time'],
-            'description' => $dataWorkday['description'],
-            'observations' => $dataWorkday['observations'],
+            'description' => $dataWorkday['description']
         ]);
         $workday->attendance()->associate($attendance);
         $workday->type()->associate(Catalogue::where('code', $dataWorkday['type']['code'])->where('type', $catalogues['workday']['type']['type'])->first());
         $workday->state()->associate(State::firstWhere('code', State::ACTIVE));
         $workday->save();
+        $observation = new Observation([
+            'old_values' => null,
+            'new_values' => 'Hora inicio: ' . $dataWorkday['start_time'],
+            'description' => $dataWorkday['observation']
+        ]);
+
+        $observation->state()->associate(State::firstWhere('code', State::ACTIVE));
+        $observation->user()->associate($user);
+        $observation->observationable()->associate($workday);
+        $observation->save();
         return $workday;
     }
 
@@ -419,5 +491,39 @@ class AttendanceController extends Controller
 
         $durationFormat = $startHour . ' hours ' . $startMinute . ' minutes ' . $startSecond . ' seconds';
         return $endDate->sub($durationFormat)->format('H:i:s');
+    }
+
+    private function createOrUpdateTask($user, $datTask, $attendance)
+    {
+        $task = $attendance->tasks()->where('type_id', $datTask['type']['id'])->first();
+
+        if (!$task) {
+            $task = new Task([
+                'percentage_advance' => $datTask['percentage_advance'],
+                'description' => $datTask['description'],
+            ]);
+        } else {
+            $task->update([
+                'percentage_advance' => $datTask['percentage_advance'],
+                'description' => $datTask['description'],
+            ]);
+        }
+
+        $task->attendance()->associate($attendance);
+        $task->type()->associate(Catalogue::findOrFail($datTask['type']['id']));
+        $task->state()->associate(State::firstWhere('code', State::ACTIVE));
+        $task->save();
+
+        $observation = new Observation([
+            'old_values' => null,
+            'new_values' => Catalogue::findOrFail($datTask['type']['id'])->name,
+            'description' => $datTask['observation']
+        ]);
+
+        $observation->state()->associate(State::firstWhere('code', State::ACTIVE));
+        $observation->user()->associate($user);
+        $observation->observationable()->associate($task);
+        $observation->save();
+        return $task;
     }
 }

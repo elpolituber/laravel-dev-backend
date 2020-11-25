@@ -2,9 +2,10 @@
 
 namespace App\Models\Attendance;
 
-use App\Models\Authentication\User;
 use App\Models\Ignug\Institution;
 use App\Models\Ignug\Observation;
+use App\Traits\StatusActiveTrait;
+use App\Traits\StatusDeletedTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Ignug\Teacher;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +18,8 @@ class Attendance extends Model implements Auditable
 
     use HasFactory;
     use \OwenIt\Auditing\Auditable;
+    use StatusActiveTrait;
+    use StatusDeletedTrait;
 
     protected $connection = 'pgsql-attendance';
 

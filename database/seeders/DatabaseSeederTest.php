@@ -154,7 +154,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'AVATAR',
             'uri' => 'avatars/' . $userAdmin->username . '.png',
             'extension' => 'png',
-            'type' => User::TYPE_AVATARS,
+            'type' => 'AVATARS',
             'state_id' => 1
         ]);
 

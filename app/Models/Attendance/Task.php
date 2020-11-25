@@ -2,6 +2,9 @@
 
 namespace App\Models\Attendance;
 
+use App\Models\Ignug\Observation;
+use App\Traits\StatusActiveTrait;
+use App\Traits\StatusDeletedTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Contracts\Auditable;
@@ -12,16 +15,14 @@ class Task extends Model implements Auditable
 {
     use HasFactory;
     use \OwenIt\Auditing\Auditable;
+    use StatusActiveTrait;
+    use StatusDeletedTrait;
+
     protected $connection = 'pgsql-attendance';
 
     protected $fillable = [
         'description',
-        'percentage_advance',
-        'observations'
-    ];
-
-    protected $casts = [
-        'observations' => 'array',
+        'percentage_advance'
     ];
 
     public function attendance()
@@ -37,5 +38,10 @@ class Task extends Model implements Auditable
     public function state()
     {
         return $this->belongsTo(State::class);
+    }
+
+    public function observations()
+    {
+        return $this->morphMany(Observation::class, 'observationable');
     }
 }

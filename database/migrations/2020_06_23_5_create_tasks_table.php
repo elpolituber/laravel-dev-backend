@@ -15,7 +15,6 @@ class CreateTasksTable extends Migration
             $table->foreignId('state_id')->constrained('ignug.states');
             $table->text('description')->nullable();
             $table->unsignedDouble('percentage_advance')->default(0);
-            $table->json('observations')->nullable();
             $table->timestamps();
         });
     }

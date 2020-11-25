@@ -14,7 +14,6 @@ class CreateWorkdaysTable extends Migration
             $table->foreignId('type_id')->constrained('ignug.catalogues');
             $table->foreignId('state_id')->constrained('ignug.states');
             $table->text('description')->nullable();
-            $table->json('observations')->nullable();
             $table->time('start_time')->nullable();
             $table->time('end_time')->nullable();
             $table->time('duration')->nullable();

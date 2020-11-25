@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance\Attendance;
 use App\Models\Authentication\Role;
 use App\Models\Ignug\Catalogue;
+use App\Models\Ignug\Observation;
 use App\Models\Ignug\State;
 use App\Models\Attendance\Task;
 use App\Models\Ignug\Teacher;
@@ -35,7 +36,6 @@ class TaskController extends Controller
                     'code' => '404',
                 ]], 404);
         }
-
 
         return response()->json([
             'data' => $user->attendances()->with(['workdays' => function ($workdays) {
