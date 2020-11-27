@@ -22,21 +22,20 @@ class AttendanceController extends Controller
     {
         $users = User::with(['attendance' => function ($attendances) use ($request) {
             $attendances->with(['workdays' => function ($workdays) use ($request) {
-                $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->with('observations')->with('type');
+                $workdays->with('observations')->with('type');
             }])
                 ->with(['tasks' => function ($tasks) {
                     $tasks->with('observations')->with(['type' => function ($type) {
                         $type->with(['parent' => function ($parent) {
                             $parent->orderBy('name');
                         }]);
-                    }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
+                    }]);
                 }])
                 ->where('institution_id', $request->institution_id)
                 ->where('date', $request->date);
         }])->with(['institutions' => function ($institutions) use ($request) {
             $institutions->where('institution_id', $request->institution_id);
         }])
-            ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
             ->get();
 
         if (sizeof($users) === 0) {
@@ -61,18 +60,18 @@ class AttendanceController extends Controller
     {
         $attendances = Attendance::
         with(['workdays' => function ($workdays) {
-            $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+            $workdays
                 ->with('observations')->with('type');
         }])
             ->with(['tasks' => function ($tasks) {
-                $tasks->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+                $tasks
                     ->with('observations')->with(['type' => function ($type) {
                         $type->with('parent');
                     }]);
             }])
             ->whereBetween('date', [$request->start_date, $request->end_date])
             ->where('institution_id', $request->institution_id)
-            ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
             ->get();
         return response()->json([
             'data' => $attendances,
@@ -88,17 +87,17 @@ class AttendanceController extends Controller
         $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
         $processes = Catalogue::where('type', $catalogues['task']['process']['type'])->orderBy('name')->get();
         $attendances = Attendance::with(['workdays' => function ($workdays) {
-            $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+            $workdays
                 ->with('type');
         }])
             ->with(['tasks' => function ($tasks) {
-                $tasks->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+                $tasks
                     ->with(['type' => function ($type) {
                         $type->with('parent');
                     }]);
             }])
             ->where('institution_id', $request->institution_id)
-            ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
             ->get();
 
         $data = array();
@@ -132,17 +131,17 @@ class AttendanceController extends Controller
         $user = User::findOrFail($request->user_id);
         $attendances = $user->attendances()
             ->with(['workdays' => function ($workdays) {
-                $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+                $workdays
                     ->with('observations')->with('type');
             }])
             ->with(['tasks' => function ($tasks) {
-                $tasks->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+                $tasks
                     ->with('observations')->with(['type' => function ($type) {
                         $type->with('parent');
                     }]);
             }])
             ->where('institution_id', $request->institution_id)
-            ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
             ->get();
         return response()->json([
             'data' => $attendances,
@@ -159,18 +158,18 @@ class AttendanceController extends Controller
 
         $attendances = $user->attendances()
             ->with(['workdays' => function ($workdays) {
-                $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+                $workdays
                     ->with('observations')->with('type');
             }])
             ->with(['tasks' => function ($tasks) {
-                $tasks->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+                $tasks
                     ->with('observations')->with(['type' => function ($type) {
                         $type->with('parent');
                     }]);
             }])
             ->whereBetween('date', [$request->start_date, $request->end_date])
             ->where('institution_id', $request->institution_id)
-            ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
             ->get();
         return response()->json([
             'data' => $attendances,
@@ -186,14 +185,14 @@ class AttendanceController extends Controller
         $user = User::findOrFail($request->user_id);
         $attendances = $user->attendances()
             ->with(['workdays' => function ($workdays) {
-                $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->with('observations')->with('type');
+                $workdays->with('observations')->with('type');
             }])
             ->with(['tasks' => function ($tasks) {
                 $tasks->with('observations')->with(['type' => function ($type) {
                     $type->with(['parent' => function ($parent) {
                         $parent->orderBy('name');
                     }]);
-                }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
+                }]);
             }])
             ->where('institution_id', $request->institution_id)
             ->where('date', Carbon::now())
@@ -241,7 +240,7 @@ class AttendanceController extends Controller
             $works = $attendance->workdays()
                 ->where('type_id', Catalogue::where('code', $catalogues['workday']['type']['work'])
                     ->where('type', $catalogues['workday']['type']['type'])->first()->id)
-                ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
                 ->get();
             if (sizeof($works) > 1) {
                 return response()->json([
@@ -259,7 +258,7 @@ class AttendanceController extends Controller
             $lunchs = $attendance->workdays()
                 ->where('type_id', Catalogue::where('code', $catalogues['workday']['type']['lunch'])
                     ->where('type', $catalogues['workday']['type']['type'])->first()->id)
-                ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
                 ->get();
 
             if (sizeof($lunchs) > 0) {
@@ -277,15 +276,15 @@ class AttendanceController extends Controller
 
         return response()->json([
             'data' => $user->attendances()->with(['workdays' => function ($workdays) {
-                $workdays->with('type')->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->orderBy('start_time');
+                $workdays->with('type')->orderBy('start_time');
             }])->with(['tasks' => function ($tasks) {
                 $tasks->with(['type' => function ($type) {
                     $type->with(['parent' => function ($parent) {
                         $parent->orderBy('name');
                     }]);
-                }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
+                }]);
             }])
-                ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
                 ->where('institution_id', $request->institution_id)
                 ->where('date', Carbon::now())
                 ->first(),
@@ -323,7 +322,7 @@ class AttendanceController extends Controller
 
         $workdays = Workday::where('attendance_id', $workday['attendance_id'])
             ->with('type')
-            ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
             ->orderBy('start_time')
             ->get();
         return response()->json([
@@ -363,7 +362,7 @@ class AttendanceController extends Controller
 
         $workdays = Workday::where('attendance_id', $workday['attendance_id'])
             ->with('type')
-            ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
             ->orderBy('start_time')
             ->get();
         return response()->json([
@@ -398,16 +397,16 @@ class AttendanceController extends Controller
 
         return response()->json([
             'data' => $user->attendances()->with(['workdays' => function ($workdays) {
-                $workdays->with('type')->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->orderBy('start_time');
+                $workdays->with('type')->orderBy('start_time');
             }])->with(['tasks' => function ($tasks) {
                 $tasks->with(['type' => function ($type) {
                     $type->with(['parent' => function ($parent) {
                         $parent->orderBy('name');
                     }]);
-                }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
+                }]);
             }])
                 ->where('institution_id', $request->institution_id)
-                ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
                 ->where('date', Carbon::now())
                 ->first(),
             'msg' => [
@@ -525,5 +524,16 @@ class AttendanceController extends Controller
         $observation->observationable()->associate($task);
         $observation->save();
         return $task;
+    }
+
+    public function download()
+    {
+        $data = [
+            'titulo' => 'Styde.net'
+        ];
+
+        $pdf = \PDF::loadView('vista-pdf', $data);
+
+        return $pdf->download('archivo.pdf');
     }
 }

@@ -128,7 +128,6 @@ class WorkdayController extends Controller
             $works = $attendance->workdays()
                 ->where('type_id', Catalogue::where('code',
                     $catalogues['workday']['type']['work'])->where('type', $catalogues['workday']['type']['type'])->first()->id)
-                ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
                 ->get();
 
             if (sizeof($works) > 1) {
@@ -147,7 +146,6 @@ class WorkdayController extends Controller
             $lunchs = $attendance->workdays()
                 ->where('type_id', Catalogue::where('code', $catalogues['workday']['type']['lunch'])
                     ->where('type', $catalogues['workday']['type']['type'])->first()->id)
-                ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
                 ->get();
 
             if (sizeof($lunchs) > 0) {
@@ -165,15 +163,14 @@ class WorkdayController extends Controller
 
         return response()->json([
             'data' => $user->attendances()->with(['workdays' => function ($workdays) {
-                $workdays->with('type')->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->orderBy('start_time');
+                $workdays->with('type')->orderBy('start_time');
             }])->with(['tasks' => function ($tasks) {
                 $tasks->with(['type' => function ($type) {
                     $type->with(['parent' => function ($parent) {
                         $parent->orderBy('name');
                     }]);
-                }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
+                }]);
             }])
-                ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
                 ->where('institution_id', $request->institution_id)
                 ->where('date', Carbon::now())
                 ->first(),
@@ -186,14 +183,16 @@ class WorkdayController extends Controller
 
     public function endDay(Request $request)
     {
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
         $currentTime = Carbon::now()->format('H:i:s');
         $data = $request->json()->all();
         $dataWorkday = $data['workday'];
 
-        $workday = Workday::findOrFail($dataWorkday['id']);
+        $workday = Workday::with('type')->findOrFail($dataWorkday['id']);
 
         $attendance = $workday->attendance()->first();
-        if (sizeof($attendance->tasks()->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->get()) === 0) {
+
+        if (sizeof($attendance->tasks()->get()) === 0 && $workday->type->code === $catalogues['workday']['type']['work']) {
             return response()->json([
                 'data' => null,
                 'msg' => [
@@ -208,13 +207,11 @@ class WorkdayController extends Controller
             $workday->update([
                 'end_time' => $currentTime,
                 'duration' => $this->calculateDuration($workday->start_time->format('H:i:s'), $currentTime),
-                'observations' => $dataWorkday['observations'] != null ? $dataWorkday['observations'] : null
             ]);
         }
 
         $workdays = Workday::where('attendance_id', $workday['attendance_id'])
             ->with('type')
-            ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
             ->orderBy('start_time')
             ->get();
         return response()->json([

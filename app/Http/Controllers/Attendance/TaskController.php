@@ -39,16 +39,15 @@ class TaskController extends Controller
 
         return response()->json([
             'data' => $user->attendances()->with(['workdays' => function ($workdays) {
-                $workdays->with('type')->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->orderBy('start_time');
+                $workdays->with('type')->orderBy('start_time');
             }])->with(['tasks' => function ($tasks) {
                 $tasks->with(['type' => function ($type) {
                     $type->with(['parent' => function ($parent) {
                         $parent->orderBy('name');
                     }]);
-                }])->where('state_id', State::firstWhere('code', State::ACTIVE)->id);
+                }]);
             }])
                 ->where('institution_id', $request->institution_id)
-                ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
                 ->where('date', Carbon::now())
                 ->first(),
             'msg' => [
@@ -106,17 +105,17 @@ class TaskController extends Controller
         $processes = $role->catalogues()->where('type', $catalogues['task']['process']['type'])->orderBy('name')->get();
         $attendances = $user->attendances()
             ->with(['workdays' => function ($workdays) {
-                $workdays->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+                $workdays
                     ->with('type');
             }])
             ->with(['tasks' => function ($tasks) {
-                $tasks->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+                $tasks
                     ->with(['type' => function ($type) {
                         $type->with('parent');
                     }]);
             }])
             ->where('institution_id', $request->institution_id)
-            ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
             ->get();
 
         $data = array();

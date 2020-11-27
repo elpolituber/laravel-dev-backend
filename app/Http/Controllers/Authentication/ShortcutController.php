@@ -20,7 +20,7 @@ class ShortcutController extends Controller
         })->with('shortcut')
             ->with('route')
             ->where('institution_id', $request->institution_id)
-            ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)
+
             ->limit(100)
             ->get();
         return response()->json([

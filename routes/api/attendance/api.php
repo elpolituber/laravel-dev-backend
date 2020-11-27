@@ -36,6 +36,12 @@ Route::group(['prefix' => 'attendances'], function () {
 });
 Route::apiResource('attendances', AttendanceController::class);
 
-Route::get('catalogues', function () {
+Route::get('report', function () {
+    $data = [
+        'titulo' => 'Styde.net'
+    ];
 
-});
+    $pdf = \PDF::loadView('reports.attendance.attendance', $data);
+
+    return $pdf->download('archivo.pdf');
+})->withoutMiddleware(['auth:api', 'check-attempts', 'check-status']);;

@@ -18,7 +18,7 @@ class CareerController extends Controller
     {
         // nombre, modalidad,
         $careers = Career::with('modality')
-            ->where('state_id', State::firstWhere('code', State::ACTIVE)->id)->get();
+            ->get();
     }
 
     /**
