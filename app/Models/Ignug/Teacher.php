@@ -13,6 +13,8 @@ class Teacher extends Model implements Auditable
     use \OwenIt\Auditing\Auditable;
     use HasFactory;
     protected $connection = 'pgsql-ignug';
+    protected $table = 'ignug.teachers';
+
     protected $fillable = [];
 
     public function user()

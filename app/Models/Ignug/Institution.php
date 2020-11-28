@@ -12,7 +12,9 @@ class Institution extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
     use HasFactory;
+
     protected $connection = 'pgsql-ignug';
+    protected $table = 'ignug.institutions';
     protected $fillable = [
         'code',
         'name',
@@ -57,6 +59,6 @@ class Institution extends Model implements Auditable
 
     public function users()
     {
-        return $this->morphedByMany(User::class, 'institutionable','ignug.institutionables');
+        return $this->morphedByMany(User::class, 'institutionable', 'ignug.institutionables');
     }
 }

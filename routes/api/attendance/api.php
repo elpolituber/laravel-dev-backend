@@ -34,6 +34,7 @@ Route::group(['prefix' => 'attendances'], function () {
     Route::put('day', [AttendanceController::class, 'updateDay']);
     Route::post('register_tasks', [AttendanceController::class, 'registerTask']);
 });
+
 Route::apiResource('attendances', AttendanceController::class);
 
 Route::get('report', function () {
@@ -44,4 +45,9 @@ Route::get('report', function () {
     $pdf = \PDF::loadView('reports.attendance.attendance', $data);
 
     return $pdf->download('archivo.pdf');
-})->withoutMiddleware(['auth:api', 'check-attempts', 'check-status']);;
+})->withoutMiddleware(['auth:api', 'check-attempts', 'check-status']);
+
+Route::group(['prefix' => 'reports'], function () {
+    Route::get('attendances', [AttendanceController::class, 'reportAttendances'])->withoutMiddleware(['auth:api', 'check-attempts', 'check-status']);;
+    Route::get('tasks', [AttendanceController::class, 'reportTasks'])->withoutMiddleware(['auth:api', 'check-attempts', 'check-status']);;
+});

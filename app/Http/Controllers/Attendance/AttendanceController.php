@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Attendance;
 
+use App\Exports\AttendancesExport;
+use App\Exports\TasksExport;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance\Attendance;
 use App\Models\Attendance\Task;
 use App\Models\Attendance\Workday;
-use App\Models\Authentication\Role;
 use App\Models\Authentication\User;
 use App\Models\Ignug\Institution;
 use App\Models\Ignug\Observation;
@@ -15,6 +16,7 @@ use App\Models\Ignug\Catalogue;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AttendanceController extends Controller
 {
@@ -71,7 +73,6 @@ class AttendanceController extends Controller
             }])
             ->whereBetween('date', [$request->start_date, $request->end_date])
             ->where('institution_id', $request->institution_id)
-
             ->get();
         return response()->json([
             'data' => $attendances,
@@ -97,7 +98,6 @@ class AttendanceController extends Controller
                     }]);
             }])
             ->where('institution_id', $request->institution_id)
-
             ->get();
 
         $data = array();
@@ -141,7 +141,6 @@ class AttendanceController extends Controller
                     }]);
             }])
             ->where('institution_id', $request->institution_id)
-
             ->get();
         return response()->json([
             'data' => $attendances,
@@ -169,7 +168,6 @@ class AttendanceController extends Controller
             }])
             ->whereBetween('date', [$request->start_date, $request->end_date])
             ->where('institution_id', $request->institution_id)
-
             ->get();
         return response()->json([
             'data' => $attendances,
@@ -240,7 +238,6 @@ class AttendanceController extends Controller
             $works = $attendance->workdays()
                 ->where('type_id', Catalogue::where('code', $catalogues['workday']['type']['work'])
                     ->where('type', $catalogues['workday']['type']['type'])->first()->id)
-
                 ->get();
             if (sizeof($works) > 1) {
                 return response()->json([
@@ -258,7 +255,6 @@ class AttendanceController extends Controller
             $lunchs = $attendance->workdays()
                 ->where('type_id', Catalogue::where('code', $catalogues['workday']['type']['lunch'])
                     ->where('type', $catalogues['workday']['type']['type'])->first()->id)
-
                 ->get();
 
             if (sizeof($lunchs) > 0) {
@@ -284,7 +280,6 @@ class AttendanceController extends Controller
                     }]);
                 }]);
             }])
-
                 ->where('institution_id', $request->institution_id)
                 ->where('date', Carbon::now())
                 ->first(),
@@ -322,7 +317,6 @@ class AttendanceController extends Controller
 
         $workdays = Workday::where('attendance_id', $workday['attendance_id'])
             ->with('type')
-
             ->orderBy('start_time')
             ->get();
         return response()->json([
@@ -362,7 +356,6 @@ class AttendanceController extends Controller
 
         $workdays = Workday::where('attendance_id', $workday['attendance_id'])
             ->with('type')
-
             ->orderBy('start_time')
             ->get();
         return response()->json([
@@ -381,7 +374,7 @@ class AttendanceController extends Controller
         $dataTask = $data['task'];
 
         $user = User::findOrFail($request->user_id);
-        $attendance = $user->attendances()->where('date', $currentDate)->where('institution_id', $request->institution_id)->first();
+        $attendance = $user->attendances()->where('date', $request->date)->where('institution_id', $request->institution_id)->first();
 
         if ($attendance) {
             $this->createOrUpdateTask($request->user(), $dataTask, $attendance);
@@ -406,7 +399,6 @@ class AttendanceController extends Controller
                 }]);
             }])
                 ->where('institution_id', $request->institution_id)
-
                 ->where('date', Carbon::now())
                 ->first(),
             'msg' => [
@@ -477,7 +469,6 @@ class AttendanceController extends Controller
             $startSecond = substr($startTime, 6, 2);
         }
 
-
         $endHour = substr($endTime, 0, 2);
         $endMinute = substr($endTime, 3, 2);
         if (strlen($endTime) < 6) {
@@ -526,14 +517,202 @@ class AttendanceController extends Controller
         return $task;
     }
 
-    public function download()
+    public function reportAttendances(Request $request)
     {
-        $data = [
-            'titulo' => 'Styde.net'
-        ];
+//        $users = User::with(['institutions' => function ($institutions) use ($request) {
+//            $institutions->where('institutions.id', $request->institution_id);
+//        }])->get();
+//        $start_13 = (new Carbon('2020-12-01'))->subDays(13);
+//        $end_13 = (new Carbon('2020-12-01'))->subDays(1);
+//        $start_18 = (new Carbon('2020-12-01'));
+//        $end_18 = (new Carbon('2020-12-01'))->addDays(17);
+//        $weekends13 = 0;
+//        while ($start_13 <= $end_13) {
+//            if ($start_13->format('l') == 'Saturday' || $start_13->format('l') == 'Sunday') {
+//                $weekends13++;
+//            }
+//            $start_13->modify("+1 days");
+//        }
+//
+//        $weekends18 = 0;
+//        while ($start_18 <= $end_18) {
+//            if ($start_18->format('l') == 'Saturday' || $start_18->format('l') == 'Sunday') {
+//                $weekends18++;
+//            }
+//            $start_18->modify("+1 days");
+//        }
+//
+//        $start_13 = (new Carbon('2020-12-01'))->subDays(13);
+//        $end_13 = (new Carbon('2020-12-01'))->subDays(1);
+//        $start_18 = (new Carbon('2020-12-01'));
+//        $end_18 = (new Carbon('2020-12-01'))->addDays(17);
+//
+//        $reports = array();
+//        foreach ($users as $user) {
+//            if (sizeof($user->institutions) > 0) {
+//                $attendances13 = $user->attendances()->with(['workdays' => function ($workdays) {
+//                    $workdays->with('type');
+//                }])
+//                    ->whereBetween('date', [$start_13, $end_13])
+//                    ->get();
+//                foreach ($attendances13 as $attendance) {
+//                    foreach ($attendance->workdays as $workday) {
+//                        $this->calculateTotalDuration($workday);
+//                    }
+//                }
+//
+//                $totalHours13 = $this->totalHours;
+//                $totalMinutes13 = $this->totalMinutes;
+//                $totalSeconds13 = $this->totalSeconds;
+//
+//                if ($totalSeconds13 >= 30) {
+//                    $totalMinutes13++;
+//                }
+//                if ($totalMinutes13 >= 30) {
+//                    $totalHours13++;
+//                }
+//
+//                $attendances18 = $user->attendances()->with(['workdays' => function ($workdays) {
+//                    $workdays->with('type');
+//                }])
+//                    ->whereBetween('date', [$start_18, $end_18])
+//                    ->get();
+//                $this->totalSeconds = 0;
+//                $this->totalMinutes = 0;
+//                $this->totalHours = 0;
+//                foreach ($attendances18 as $attendance) {
+//                    foreach ($attendance->workdays as $workday) {
+//                        $this->calculateTotalDuration($workday);
+//                    }
+//                }
+//                $totalHours18 = $this->totalHours;
+//                $totalMinutes18 = $this->totalMinutes;
+//                $totalSeconds18 = $this->totalSeconds;
+//                echo $totalHours18 . ' || ';
+//
+//                if ($totalSeconds18 >= 30) {
+//                    $totalMinutes18++;
+//                }
+//                if ($totalMinutes18 >= 30) {
+//                    $totalHours18++;
+//                }
+//
+//                if (sizeof($attendances13) > 0 || sizeof($attendances18) > 0) {
+//                    array_push($reports,
+//                        [
+//                            'month' => $start_18->format('F'),
+//                            'user' => $user,
+//                            'institution' => $user->institutions[0]->denomination . ' ' . $user->institutions[0]->name,
+//                            'days13' => ($totalHours13 / 8) + $weekends13,
+//                            'days18' => ($totalHours18 / 8) + $weekends18
+//                        ]);
+//                }
+//                $this->totalSeconds = 0;
+//                $this->totalMinutes = 0;
+//                $this->totalHours = 0;
+//            }
+//        }
+//        return $reports;
 
-        $pdf = \PDF::loadView('vista-pdf', $data);
+        return (new AttendancesExport)
+            ->institutionId((int)$request->institution_id)
+            ->date($request->date)
+            ->download('attendances.xlsx');
+    }
 
-        return $pdf->download('archivo.pdf');
+    public function reportTasks(Request $request)
+    {
+//        $institution = Institution::findOrFail(2);
+//        $users = User::whereHas('institutions', function ($institutions) use ($institution) {
+//            $institutions->where('institutions.id', $institution->id);
+//        })->has('teacher')->get();
+//
+//        $reports = array();
+//        foreach ($users as $user) {
+//            $attendances = $user->attendances()->with(['tasks' => function ($workdays) {
+//                $workdays->with(['type' => function ($type) {
+//                    $type->with(['parent' => function ($parent) {
+//                        $parent->orderBy('name');
+//                    }]);
+//                }]);
+//            }])
+//                ->whereBetween('date', [$request->start_date, $request->end_date])
+//                ->orderBy('date')
+//                ->get();
+//            $tasks = array();
+//            $processes = array();
+//            foreach ($attendances as $attendance) {
+//                foreach ($attendance->tasks as $task) {
+//                    array_push($tasks, $task);
+//                }
+//            }
+//
+//
+//            //if (sizeof($attendances) > 0) {
+//            array_push($reports,
+//                [
+//                    'attendances' => $attendances,
+//                    'user' => $user,
+//                    'tasks' => $tasks,
+//                ]);
+//            //}
+//            $task = array();
+//        }
+////        return $reports;
+
+        return (new TasksExport())
+            ->institutionId((int)$request->institution_id)
+            ->startDate($request->start_date)
+            ->endDate($request->end_date)
+            ->download('tasks.xlsx');
+    }
+
+    private $totalSeconds = 0;
+    private $totalMinutes = 0;
+    private $totalHours = 0;
+
+    private function calculateTotalDuration($workday)
+    {
+        $hour = substr($workday->duration, 0, 2);
+        $minute = substr($workday->duration, 3, 2);
+        $second = substr($workday->duration, 6, 2);
+
+        if ($workday->type->code === 'WORK') {
+            $this->totalSeconds += (int)$second;
+            $this->totalMinutes += (int)$minute;
+            $this->totalHours += (int)$hour;
+
+            if ($this->totalSeconds >= 60) {
+                $this->totalSeconds = 0;
+                $this->totalMinutes += 1;
+            }
+
+            if ($this->totalMinutes >= 60) {
+                $this->totalMinutes = $this->totalMinutes - 60;
+                $this->totalHours += 1;
+            }
+        }
+
+        if ($workday->type->code === 'LUNCH') {
+            if (($this->totalSeconds - (int)$second) < 0) {
+                $this->totalSeconds += 60;
+                $this->totalSeconds -= (int)$second;
+                $this->totalMinutes -= 1;
+            } else {
+                $this->totalSeconds -= (int)$second;
+            }
+
+            if (($this->totalMinutes - (int)$minute) < 0) {
+                $this->totalMinutes += 60;
+                $this->totalMinutes -= (int)$minute;
+                $this->totalHours -= 1;
+            } else {
+                $this->totalMinutes -= (int)$minute;
+            }
+
+            if (($this->totalHours - (int)$hour) >= 0) {
+                $this->totalHours -= (int)$hour;
+            }
+        }
     }
 }

@@ -51,11 +51,6 @@ class Attendance extends Model implements Auditable
         return $this->belongsTo(Catalogue::class);
     }
 
-    public function teacher()
-    {
-        return $this->belongsTo(Teacher::class, 'attendanceable_id')->with('user');
-    }
-
     public function state()
     {
         return $this->belongsTo(State::class);

@@ -10,7 +10,7 @@ class CreateTeachersTable extends Migration
     {
         Schema::connection('pgsql-ignug')->create('teachers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('authentication.users');
+            $table->foreignId('user_id')->unique()->constrained('authentication.users');
             $table->foreignId('state_id');
             $table->timestamps();
         });
